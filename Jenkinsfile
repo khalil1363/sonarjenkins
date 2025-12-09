@@ -15,7 +15,7 @@ pipeline {
         stage('Checkout Git') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/ton-pseudo/ton-depot.git',  // Remplace par TON URL GitHub
+                    url: 'https://github.com/khalil1363/sonarjenkins.git',  // Remplace par TON URL GitHub
                     credentialsId: 'github-creds'  // ID de tes creds Git
             }
         }
