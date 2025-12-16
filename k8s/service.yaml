@@ -9,4 +9,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8080
-  type: NodePort  # Ou LoadBalancer si cluster cloud
+  type: LoadBalancer  # Changed from NodePort to LoadBalancer
