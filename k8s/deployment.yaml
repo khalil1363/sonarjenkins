@@ -5,7 +5,7 @@ metadata:
   labels:
     app: sonarjenkins
 spec:
-  replicas: 3
+  replicas: 3  # 3 pods pour la démo
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -21,14 +21,10 @@ spec:
     spec:
       containers:
         - name: sonarjenkins-app
-          image: lfray/sonarjenkins-app
-          imagePullPolicy: Always
+          image: lfray/sonarjenkins-app  # Ton image Docker Hub
           ports:
             - containerPort: 8080
           resources:
             limits:
               memory: "512Mi"
-              cpu: "200m"
-            requests:
-              memory: "256Mi"
-              cpu: "200m"
+              cpu: "500m"

@@ -9,7 +9,8 @@ pipeline {
     environment {
         SONAR_TOKEN = credentials('jenkins-sonar')
         GIT_CREDS   = credentials('github-creds')
-        IMAGE_NAME = 'khalil1363/sonarjenkins-app'         // Change par ton pseudo/nom-repo
+        DOCKER_HUB_CREDS = credentials('docker-hub-creds')  // Nouveau pour Docker Hub
+        IMAGE_NAME = 'lfray/sonarjenkins-app'         // Change par ton pseudo/nom-repo
         IMAGE_TAG = "${env.BUILD_NUMBER}"                  // Tag avec numéro de build
     }
 
@@ -55,28 +56,28 @@ pipeline {
                 }
             }
         }
-      stage('Build Docker Image') {
-                  steps {
-                      sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
-                      sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
-                  }
-              }
+    stage('Build Docker Image') {
+                steps {
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
+                }
+            }
 
-              stage('Push to Docker Hub') {
-                  steps {
-                      sh 'echo $DOCKER_HUB_CREDS_PSW | docker login -u $DOCKER_HUB_CREDS_USR --password-stdin'
-                      sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-                      sh "docker push ${IMAGE_NAME}:latest"
-                  }
-              }
+            stage('Push Docker Image to Docker Hub') {
+                steps {
+                    sh 'echo $DOCKER_HUB_CREDS_PSW | docker login -u $DOCKER_HUB_CREDS_USR --password-stdin'
+                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker push ${IMAGE_NAME}:latest"
+                }
+            }
 
-              stage('Cleanup Local Images') {
-                  steps {
-                      sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
-                      sh "docker rmi ${IMAGE_NAME}:latest || true"
-                  }
-              }
-          }
+            stage('Cleanup Docker Images') {
+                steps {
+                    sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker rmi ${IMAGE_NAME}:latest"
+                }
+            }
+        }
     post {
         always {
             cleanWs()
