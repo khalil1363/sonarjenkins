@@ -2,21 +2,23 @@ pipeline {
     agent any
 
     tools {
-        maven 'M2_HOME'    // Nom de ton installation Maven dans Jenkins (vérifie dans Global Tool Configuration)
-        jdk 'JAVA_HOME'        // Nom de ton installation Java dans Jenkins
+        maven 'M2_HOME'
+        jdk 'JAVA_HOME'
     }
 
     environment {
-        SONAR_TOKEN = credentials('jenkins-sonar') // ID du credential SonarQube dans Jenkins
-        GIT_CREDS   = credentials('github-creds') // ID du credential Git dans Jenkins
+        SONAR_TOKEN = credentials('jenkins-sonar')
+        GIT_CREDS   = credentials('github-creds')
+        IMAGE_NAME = 'khalil1363/sonarjenkins-app'         // Change par ton pseudo/nom-repo
+        IMAGE_TAG = "${env.BUILD_NUMBER}"                  // Tag avec numéro de build
     }
 
     stages {
         stage('Checkout Git') {
             steps {
                 git branch: 'master',
-                    url: 'https://github.com/khalil1363/sonarjenkins.git',  // Remplace par TON URL GitHub
-                    credentialsId: 'github-creds'  // ID de tes creds Git
+                    url: 'https://github.com/khalil1363/sonarjenkins.git',
+                    credentialsId: 'github-creds'
             }
         }
 
@@ -34,7 +36,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sqkf') {  // Nom de ton serveur SonarQube configuré dans Jenkins
+                withSonarQubeEnv('sqkf') {
                     sh 'mvn sonar:sonar -Dsonar.login=${SONAR_TOKEN}'
                 }
             }
@@ -42,27 +44,42 @@ pipeline {
 
         stage('Package (JAR)') {
             steps {
-                sh 'mvn package -DskipTests'  // Skip tests pour tester vite, enlève si tu as des tests
+                sh 'mvn package -DskipTests'
             }
         }
 
-        // Optionnel : Archive le JAR pour le voir dans Jenkins
-        stage('Archive Artifact') {
-            steps {
-                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+
+            stage('Archive Artifact') {
+                steps {
+                    archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+                }
             }
         }
-    }
+        stage('Push Docker Image to Docker Hub') {
+                    steps {
+                        sh 'echo $DOCKER_HUB_CREDS_PSW | docker login -u $DOCKER_HUB_CREDS_USR --password-stdin'
+                        sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                        sh "docker push ${IMAGE_NAME}:latest"
+                    }
+                }
+
+                stage('Cleanup Docker Images') {
+                    steps {
+                        sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
+                        sh "docker rmi ${IMAGE_NAME}:latest"
+                    }
+                }
+            }
 
     post {
         always {
-            cleanWs()  // Nettoie l'espace de travail
+            cleanWs()
         }
         success {
-            echo 'Pipeline CI réussi !'
+            echo 'Pipeline CI réussi '
         }
         failure {
-            echo 'Échec du pipeline :('
+            echo 'Échec du pipeline '
         }
     }
 }

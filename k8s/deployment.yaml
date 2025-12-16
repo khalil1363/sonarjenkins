@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarjenkins-deployment
+  labels:
+    app: sonarjenkins
+spec:
+  replicas: 3  # 3 pods pour la démo
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: sonarjenkins
+  template:
+    metadata:
+      labels:
+        app: sonarjenkins
+    spec:
+      containers:
+        - name: sonarjenkins-app
+          image: khalil1363/sonarjenkins-app:latest  # Ton image Docker Hub
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

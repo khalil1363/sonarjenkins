@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarjenkins-service
+spec:
+  selector:
+    app: sonarjenkins
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: NodePort  # Ou LoadBalancer si cluster cloud
