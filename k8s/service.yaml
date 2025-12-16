@@ -5,8 +5,9 @@ metadata:
 spec:
   selector:
     app: sonarjenkins
+  type: NodePort
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 8080
-  type: LoadBalancer  # Changed from NodePort to LoadBalancer
+      port: 80          # Service port
+      targetPort: 8080  # Container port
+      nodePort: 30080   # External port (must be between 30000–32767)
