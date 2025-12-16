@@ -22,6 +22,7 @@ spec:
       containers:
         - name: sonarjenkins-app
           image: lfray/sonarjenkins-app  # Ton image Docker Hub
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           resources:
