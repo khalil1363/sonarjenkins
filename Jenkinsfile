@@ -7,11 +7,12 @@ pipeline {
     }
 
     environment {
-        SONAR_TOKEN = credentials('jenkins-sonar')
-        GIT_CREDS   = credentials('github-creds')
-        DOCKER_HUB_CREDS = credentials('docker-hub-creds')  // Nouveau pour Docker Hub
-        IMAGE_NAME = 'khalil1363/esprit-k8s-2025:latest'         // Change par ton pseudo/nom-repo
-        IMAGE_TAG = "${env.BUILD_NUMBER}"                  // Tag avec numéro de build
+        SONAR_TOKEN      = credentials('jenkins-sonar')
+        DOCKER_HUB_CREDS = credentials('docker-hub-creds')
+        IMAGE_NAME       = 'lfray/khalil1.0.1:latest'      // Ton repo Docker Hub
+        IMAGE_TAG        = "${env.BUILD_NUMBER}"
+        DOCKER_IMAGE     = "${IMAGE_NAME}:${IMAGE_TAG}"
+        DOCKER_LATEST    = "${IMAGE_NAME}:latest"
     }
 
     stages {
@@ -49,50 +50,56 @@ pipeline {
             }
         }
 
+        stage('Archive Artifact') {
+            steps {
+                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+            }
+        }
 
-            stage('Archive Artifact') {
-                steps {
-                    archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+        // ==== PARTIE CD : DOCKER ====
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t ${DOCKER_IMAGE} ."
+                sh "docker tag ${DOCKER_IMAGE} ${DOCKER_LATEST}"
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_TOKEN'
+                )]) {
+                    sh 'echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin'
                 }
             }
         }
-     stage(' Docker Login') {
-               steps {
-                   withCredentials([usernamePassword(
-                       credentialsId: 'dockerhub-token',
-                       usernameVariable: 'DOCKER_USER',
-                       passwordVariable: 'DOCKER_TOKEN'
-                   )]) {
-                       sh 'echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin'
-                   }
-               }
-           }
 
-           stage('📤 Push Docker Image') {
-               steps {
-                   sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
-               }
-           }
-
-           stage('☸️ Deploy to Kubernetes') {
-               steps {
-                   sh '''
-                       kubectl apply -f k8s/
-                       kubectl rollout status deployment tpfoyer-deployment
-                   '''
-               }
-           }
-       }
+        stage('Push Docker Image') {
+            steps {
+                sh "docker push ${DOCKER_IMAGE}"
+                sh "docker push ${DOCKER_LATEST}"
+            }
         }
+
+        stage('Cleanup Docker Images') {
+            steps {
+                sh "docker rmi ${DOCKER_IMAGE} || true"
+                sh "docker rmi ${DOCKER_LATEST} || true"
+            }
+        }
+    }
+
     post {
         always {
             cleanWs()
         }
         success {
-            echo 'Pipeline CI réussi '
+            echo 'Pipeline CI/CD complet réussi ! Image Docker poussée sur Docker Hub'
         }
         failure {
-            echo 'Échec du pipeline '
+            echo 'Échec du pipeline'
         }
     }
 }
