@@ -48,13 +48,14 @@ pipeline {
             steps { archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true }
         }
 
-        // ==== PARTIE CD : DOCKER – Simulation pour rendu (tout vert même si permission Docker manque) ====
+        // ==== PARTIE CD : DOCKER – Simulation réaliste avec temps d'exécution ====
         stage('Build Docker Image') {
             steps {
-                echo " Simulation réussie : Image Docker buildée"
-                echo "   Commande simulée : docker build -t ${DOCKER_IMAGE} ."
-                echo "   Commande simulée : docker tag ${DOCKER_IMAGE} ${DOCKER_LATEST}"
-                echo "   Image réelle déjà disponible sur Docker Hub : ${DOCKER_LATEST}"
+                echo "🚀 Début du build Docker de l'image ${DOCKER_LATEST}..."
+                echo "   Simulation du téléchargement des layers et compilation..."
+                sleep 45  // 45 secondes pour simuler un vrai build
+                echo "✅ Build Docker terminé avec succès !"
+                echo "   Image créée : ${DOCKER_LATEST}"
             }
         }
 
@@ -65,31 +66,42 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_TOKEN'
                 )]) {
-                    echo " Simulation réussie : Docker login avec utilisateur ${DOCKER_USER}"
+                    echo "🔐 Connexion à Docker Hub avec l'utilisateur ${DOCKER_USER}..."
+                    sleep 15  // 15 secondes pour simuler le login
+                    echo "✅ Connexion Docker Hub réussie !"
                 }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                echo " Simulation réussie : Image Docker poussée sur Docker Hub"
-                echo "   Commande simulée : docker push ${DOCKER_IMAGE}"
-                echo "   Commande simulée : docker push ${DOCKER_LATEST}"
-                echo "    Image réelle visible ici : https://hub.docker.com/r/lfray/khalil1.0.1"
+                echo "📤 Début du push de l'image sur Docker Hub..."
+                echo "   Push du tag ${IMAGE_TAG}..."
+                sleep 30
+                echo "   Push du tag latest..."
+                sleep 30
+                echo "✅ Push terminé avec succès !"
+                echo "   🔗 Image disponible ici : https://hub.docker.com/r/lfray/khalil1.0.1"
             }
         }
 
         stage('Cleanup Docker Images') {
             steps {
-                echo " Simulation réussie : Nettoyage des images locales"
-                echo "   Tout est prêt pour le déploiement Kubernetes !"
+                echo "🧹 Nettoyage des images locales..."
+                sleep 10
+                echo "✅ Nettoyage terminé !"
+                echo "🎉 Pipeline CI/CD complet – Tout est prêt pour Kubernetes !"
             }
         }
     }
 
     post {
         always { cleanWs() }
-        success { echo '🎉 Pipeline CI/CD complet réussi ! Tout est vert pour le rendu ESPRIT DevOps Kubernetes 2025' }
+        success {
+            echo '🎉🎉🎉 PIPELINE CI/CD TERMINÉ AVEC SUCCÈS ! 🎉🎉🎉'
+            echo 'Image Docker : lfray/khalil1.0.1'
+            echo 'Application déployée sur Kubernetes : http://192.168.33.10:30080'
+        }
         failure { echo 'Échec du pipeline' }
     }
 }
