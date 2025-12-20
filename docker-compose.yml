@@ -16,7 +16,7 @@ services:
     depends_on:
       - mysql
     ports:
-      - "8080:8080"
+      - "8087:8087"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3307/TPProjet?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
