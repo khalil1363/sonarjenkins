@@ -9,6 +9,8 @@ pipeline {
     environment {
         SONAR_TOKEN = credentials('jenkins-sonar')
         GIT_CREDS   = credentials('github-creds')
+                DOCKER_CREDS   = credentials('docker-hub-creds')  // Docker Hub credentials
+
     }
 
     stages {
@@ -52,7 +54,27 @@ pipeline {
                     archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
                 }
             }
-        }
+        stage('Docker Build') {
+                    steps {
+                        sh "docker build -t ${DOCKER_IMAGE}:latest ."
+                    }
+                }
+
+                stage('Docker Push') {
+                    steps {
+                        withCredentials([usernamePassword(
+                            credentialsId: "${DOCKER_CREDS}",
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                        )]) {
+                            sh """
+                                echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                                docker push ${DOCKER_IMAGE}:latest
+                            """
+                        }
+                    }
+                }
+            }
 
     post {
         always {
