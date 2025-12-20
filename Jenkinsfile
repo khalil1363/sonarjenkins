@@ -9,8 +9,8 @@ pipeline {
     environment {
         SONAR_TOKEN = credentials('jenkins-sonar')
         GIT_CREDS   = credentials('github-creds')
-                DOCKER_CREDS   = credentials('docker-hub-creds')  // Docker Hub credentials
-
+        DOCKER_CREDS   = credentials('docker-hub-creds')  // Docker Hub credentials
+        DOCKER_IMAGE  = 'lfray/sonarjenkins'
     }
 
     stages {
