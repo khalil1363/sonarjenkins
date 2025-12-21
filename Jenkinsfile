@@ -74,7 +74,14 @@ pipeline {
                         }
                     }
                 }
-            }
+
+            stage('Deploy to Kubernetes') {
+                        steps {
+                            sh 'kubectl apply -f k8s/mysql.yaml'
+                            sh 'kubectl apply -f k8s/app.yaml'
+                        }
+                    }
+                }
 
     post {
         always {
