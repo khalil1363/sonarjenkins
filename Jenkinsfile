@@ -77,8 +77,8 @@ pipeline {
 
             stage('Deploy to Kubernetes') {
                         steps {
-                           sh 'kubectl apply --validate=false -f k8s/mysql.yaml'
-                                  sh 'kubectl apply --validate=false -f k8s/app.yaml'
+                            sh 'kubectl apply -f k8s/mysql.yaml'
+                            sh 'kubectl apply -f k8s/app.yaml'
                         }
                     }
                 }
