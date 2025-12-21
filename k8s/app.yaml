@@ -16,7 +16,7 @@ spec:
         - name: springboot
           image: lfray/sonarjenkins:latest
           ports:
-            - containerPort: 8087
+            - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
               value: jdbc:mysql://mysql:3306/TPProjet
@@ -34,6 +34,6 @@ spec:
   selector:
     app: springboot
   ports:
-    - port: 8087
-      targetPort: 8087
+    - port: 8080
+      targetPort: 8080
       nodePort: 30080
